@@ -1,0 +1,9 @@
+{
+  "buildCommand": "pnpm --filter @workspace/web build",
+  "outputDirectory": "artifacts/web/dist/public",
+  "installCommand": "pnpm install --no-frozen-lockfile",
+  "framework": null,
+  "env": {
+    "BASE_PATH": "/"
+  }
+}
