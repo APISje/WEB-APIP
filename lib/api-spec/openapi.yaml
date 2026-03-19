@@ -1,0 +1,237 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: chat
+    description: Visitor chat operations
+  - name: admin
+    description: Admin operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /chat/session:
+    post:
+      operationId: createChatSession
+      tags: [chat]
+      summary: Create or get a chat session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSessionRequest"
+      responses:
+        "200":
+          description: Session created or retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatSession"
+
+  /chat/session/{visitorId}/messages:
+    get:
+      operationId: getSessionMessages
+      tags: [chat]
+      summary: Get messages for a visitor session
+      parameters:
+        - name: visitorId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatMessage"
+
+  /admin/sessions:
+    get:
+      operationId: adminGetSessions
+      tags: [admin]
+      summary: Get all chat sessions
+      parameters:
+        - name: x-admin-password
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of sessions with last message
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminSession"
+        "401":
+          description: Unauthorized
+
+  /admin/sessions/{sessionId}/messages:
+    get:
+      operationId: adminGetSessionMessages
+      tags: [admin]
+      summary: Get messages for a session (admin)
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: x-admin-password
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatMessage"
+        "401":
+          description: Unauthorized
+
+  /admin/sessions/{sessionId}/close:
+    patch:
+      operationId: adminCloseSession
+      tags: [admin]
+      summary: Close a chat session
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: x-admin-password
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session closed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatSession"
+        "401":
+          description: Unauthorized
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    CreateSessionRequest:
+      type: object
+      properties:
+        visitorId:
+          type: string
+      required:
+        - visitorId
+
+    ChatSession:
+      type: object
+      properties:
+        id:
+          type: integer
+        visitorId:
+          type: string
+        status:
+          type: string
+          enum: [active, closed]
+        createdAt:
+          type: string
+          format: date-time
+        lastMessageAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - visitorId
+        - status
+        - createdAt
+        - lastMessageAt
+
+    ChatMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        sessionId:
+          type: integer
+        sender:
+          type: string
+          enum: [visitor, admin]
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - sessionId
+        - sender
+        - content
+        - createdAt
+
+    AdminSession:
+      type: object
+      properties:
+        id:
+          type: integer
+        visitorId:
+          type: string
+        status:
+          type: string
+          enum: [active, closed]
+        createdAt:
+          type: string
+          format: date-time
+        lastMessageAt:
+          type: string
+          format: date-time
+        lastMessage:
+          type: string
+        unreadCount:
+          type: integer
+      required:
+        - id
+        - visitorId
+        - status
+        - createdAt
+        - lastMessageAt
+        - unreadCount
